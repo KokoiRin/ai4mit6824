@@ -1,0 +1,42 @@
+# Go 环境配置
+go version 2>&1 || echo "Go not installed"
+which go 2>&1 || echo "go not found"
+echo "GOROOT: $GOROOT"; echo "GOPATH: $GOPATH"; echo "GO111MODULE: $GO111MODULE"
+uname -m
+brew --version
+brew install go
+go version
+mkdir -p ~/6.824
+go env GOPATH
+cat ~/.zshrc 2>/dev/null | head -50 || echo "File not found"
+cat >> ~/.zshrc << 'EOF'
+
+# Go environment variables
+export GOPATH=$HOME/go
+export GOBIN=$GOPATH/bin
+export PATH=$PATH:/usr/local/go/bin:$GOBIN
+
+# 6.824 MapReduce working directory
+export CD6824=$HOME/6.824
+EOF
+tail -10 ~/.zshrc
+source ~/.zshrc && go version && echo "GOPATH: $GOPATH" && echo "GOBIN: $GOBIN" && echo "CD6824: $CD6824"
+mkdir -p ~/6.824/6.5840 && cd ~/6.824/6.5840 && go mod init 6.5840
+ls -la ~/6.824/6.5840/
+rm -f go1.24.2.darwin-arm64.tar.gz
+
+# 推送到 GitHub
+cd /Users/guoysh/Library/Mobile\ Documents/com~apple~CloudDocs/6824/6.5840 && ls -la
+git status
+git remote -v
+brew install gh
+export PATH="/opt/homebrew/bin:$PATH" && gh --version
+git config --list | grep -E 'user|github'
+git credential-osxkeychain 2>&1 || echo "no keychain helper"
+export PATH="/opt/homebrew/bin:$PATH" && gh auth status 2>&1
+export PATH="/opt/homebrew/bin:$PATH" && gh repo create KokoiRin/mit-6824 --private --description "MIT 6.824 Distributed Systems Lab" 2>&1
+cd /Users/guoysh/Library/Mobile\ Documents/com~apple~CloudDocs/6824/6.5840 && git status
+cat ~/.ssh/id_ed25519.pub
+ssh-add ~/.ssh/id_ed25519 2>&1
+ssh -T git@github.com 2>&1
+cd /Users/guoysh/Library/Mobile\ Documents/com~apple~CloudDocs/6824/6.5840 && git push github master 2>&1

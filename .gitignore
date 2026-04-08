@@ -1,5 +1,6 @@
 pkg/
 *-handin.tar.gz
+cli.txt
 
 # MR temp files
 src/main/mr-out-*

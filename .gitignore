@@ -1,2 +1,6 @@
 pkg/
 *-handin.tar.gz
+
+# MR temp files
+src/main/mr-out-*
+src/mr/mr-tmp-*/

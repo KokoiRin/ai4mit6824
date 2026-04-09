@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
+	"time"
 )
 
 type TaskType int
@@ -15,19 +16,20 @@ const (
 	Reduce
 )
 
-type TypeStatus int
+type TaskStatus int
 
 const (
-	Idle TypeStatus = iota
+	Idle TaskStatus = iota
 	InProgress
 	Completed
 )
 
 type Task struct {
-	Id       int
-	Type     TaskType   // Map 或 Reduce
-	Status   TypeStatus // Idle / InProgress / Completed
-	FileName string     // 仅 Map 用
+	Id        int
+	Type      TaskType   // Map 或 Reduce
+	Status    TaskStatus // Idle / InProgress / Completed
+	FileName  string     // 仅 Map 用
+	StartTime time.Time
 }
 
 type Phase int
@@ -47,17 +49,17 @@ type Coordinator struct {
 	phase       Phase
 }
 
-// Your code here -- RPC handlers for the worker to call.
+// 在这里添加 RPC handler，供 worker 调用
 
-// an example RPC handler.
+// 示例 RPC handler
 //
-// the RPC argument and reply types are defined in rpc.go.
+// RPC 参数和返回类型定义在 rpc.go 中
 func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
 	reply.Y = args.X + 1
 	return nil
 }
 
-// start a thread that listens for RPCs from worker.go
+// 启动一个线程监听来自 worker.go 的 RPC 请求
 func (c *Coordinator) server(sockname string) {
 	rpc.Register(c)
 	rpc.HandleHTTP()
@@ -69,23 +71,23 @@ func (c *Coordinator) server(sockname string) {
 	go http.Serve(l, nil)
 }
 
-// main/mrcoordinator.go calls Done() periodically to find out
-// if the entire job has finished.
+// main/mrcoordinator.go 周期性调用 Done() 来检查
+// 整个作业是否已完成
 func (c *Coordinator) Done() bool {
 	ret := false
 
-	// Your code here.
+	// 在这里添加代码
 
 	return ret
 }
 
-// create a Coordinator.
-// main/mrcoordinator.go calls this function.
-// nReduce is the number of reduce tasks to use.
+// 创建 Coordinator
+// main/mrcoordinator.go 调用此函数
+// nReduce 是 reduce 任务的数量
 func MakeCoordinator(sockname string, files []string, nReduce int) *Coordinator {
 	c := Coordinator{}
 
-	// Your code here.
+	// 在这里添加代码
 
 	c.server(sockname)
 	return &c

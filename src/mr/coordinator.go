@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -41,6 +42,7 @@ const (
 )
 
 type Coordinator struct {
+	mu          sync.Mutex
 	files       []string
 	nMap        int
 	mapTasks    []Task
@@ -49,13 +51,72 @@ type Coordinator struct {
 	phase       Phase
 }
 
-// 在这里添加 RPC handler，供 worker 调用
+// Worker 请求新任务
+func (c *Coordinator) GetTask(args *GetTaskArgs, reply *GetTaskReply) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-// 示例 RPC handler
-//
-// RPC 参数和返回类型定义在 rpc.go 中
-func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
-	reply.Y = args.X + 1
+	switch c.phase {
+	case MapPhase:
+		// 分配 Map 任务
+		for i := 0; i < c.nMap; i++ {
+			if c.mapTasks[i].Status == Idle {
+				c.mapTasks[i].Status = InProgress
+				c.mapTasks[i].StartTime = time.Now()
+				reply.Action = DoMap
+				reply.TaskId = i
+				reply.FileName = c.mapTasks[i].FileName
+				reply.NReduce = c.nReduce
+				return nil
+			}
+			// 检查超时：如果任务执行超过 10 秒但未完成，重新分配
+			if c.mapTasks[i].Status == InProgress {
+				if time.Since(c.mapTasks[i].StartTime) > 10*time.Second {
+					c.mapTasks[i].Status = InProgress
+					c.mapTasks[i].StartTime = time.Now()
+					reply.Action = DoMap
+					reply.TaskId = i
+					reply.FileName = c.files[i]
+					reply.NReduce = c.nReduce
+					return nil
+				}
+			}
+		}
+		// 所有 Map 任务都在执行中，等待
+		reply.Action = Wait
+		return nil
+
+	case ReducePhase:
+		// 分配 Reduce 任务
+		for i := 0; i < c.nReduce; i++ {
+			if c.reduceTasks[i].Status == Idle {
+				c.reduceTasks[i].Status = InProgress
+				c.reduceTasks[i].StartTime = time.Now()
+				reply.Action = DoReduce
+				reply.TaskId = i
+				reply.NReduce = c.nReduce
+				return nil
+			}
+			// 检查超时
+			if c.reduceTasks[i].Status == InProgress {
+				if time.Since(c.reduceTasks[i].StartTime) > 10*time.Second {
+					c.reduceTasks[i].Status = InProgress
+					c.reduceTasks[i].StartTime = time.Now()
+					reply.Action = DoReduce
+					reply.TaskId = i
+					reply.NReduce = c.nReduce
+					return nil
+				}
+			}
+		}
+		reply.Action = Wait
+		return nil
+
+	case DonePhase:
+		reply.Action = Exit
+		return nil
+	}
+
 	return nil
 }
 
@@ -74,6 +135,8 @@ func (c *Coordinator) server(sockname string) {
 // main/mrcoordinator.go 周期性调用 Done() 来检查
 // 整个作业是否已完成
 func (c *Coordinator) Done() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	return c.phase == DonePhase
 }
 

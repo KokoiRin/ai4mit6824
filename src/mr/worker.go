@@ -37,25 +37,6 @@ func Worker(sockname string, mapf func(string, string) []KeyValue,
 
 }
 
-type GetTaskArgs struct {
-}
-
-type TaskAction int
-
-const (
-	DoMap TaskAction = iota
-	DoReduce
-	Wait
-	Exit
-)
-
-type GetTaskReply struct {
-	Action   TaskAction
-	TaskId   int
-	FileName string
-	NReduce  int
-}
-
 func CallGetTask() {
 	// 声明参数结构体
 	args := GetTaskArgs{}

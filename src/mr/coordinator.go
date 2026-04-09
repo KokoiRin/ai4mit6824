@@ -74,11 +74,7 @@ func (c *Coordinator) server(sockname string) {
 // main/mrcoordinator.go 周期性调用 Done() 来检查
 // 整个作业是否已完成
 func (c *Coordinator) Done() bool {
-	ret := false
-
-	// 在这里添加代码
-
-	return ret
+	return c.phase == DonePhase
 }
 
 // 创建 Coordinator
@@ -86,8 +82,34 @@ func (c *Coordinator) Done() bool {
 // nReduce 是 reduce 任务的数量
 func MakeCoordinator(sockname string, files []string, nReduce int) *Coordinator {
 	c := Coordinator{}
+	// 保存输入文件和 reduce 数量
+	c.files = files
+	c.nMap = len(files)
+	c.nReduce = nReduce
 
-	// 在这里添加代码
+	// 初始化 map 任务
+	c.mapTasks = make([]Task, c.nMap)
+	for i := 0; i < c.nMap; i++ {
+		c.mapTasks[i] = Task{
+			Id:       i,
+			Type:     Map,
+			Status:   Idle,
+			FileName: files[i],
+		}
+	}
+
+	// 初始化 reduce 任务
+	c.reduceTasks = make([]Task, nReduce)
+	for i := 0; i < nReduce; i++ {
+		c.reduceTasks[i] = Task{
+			Id:     i,
+			Type:   Reduce,
+			Status: Idle,
+		}
+	}
+
+	// 初始阶段为 Map
+	c.phase = MapPhase
 
 	c.server(sockname)
 	return &c

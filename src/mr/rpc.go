@@ -19,5 +19,22 @@ type ExampleReply struct {
 	Y int
 }
 
-// Add your RPC definitions here.
+type GetTaskArgs struct{}
 
+type TaskAction int
+
+const (
+	DoMap TaskAction = iota
+	DoReduce
+	Wait
+	Exit
+)
+
+type GetTaskReply struct {
+	Action   TaskAction
+	TaskId   int
+	FileName string
+	NReduce  int
+}
+
+// Add your RPC definitions here.

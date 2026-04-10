@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/rpc"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -39,7 +40,7 @@ func Worker(sockname string, mapf func(string, string) []KeyValue,
 		case DoMap:
 			DoMapTask(reply.TaskId, reply.FileName, reply.NReduce, mapf)
 		case DoReduce:
-			DoReduceTask(reply.TaskId, reply.NReduce, reducef)
+			DoReduceTask(reply.TaskId, reply.NMap, reducef)
 		case Wait:
 			time.Sleep(time.Second)
 		case Exit:
@@ -95,10 +96,73 @@ func DoMapTask(taskId int, filename string, nReduce int,
 	CallReportTaskDone(taskId, Map)
 }
 
-func DoReduceTask(taskId int, nReduce int,
+func DoReduceTask(reduceId int, nMap int,
 	reducef func(string, []string) string) {
 
+	// 读取所有 map 任务产生的属于这个 reduce 的文件
+	kva := []KeyValue{}
+	for mapId := 0; mapId < nMap; mapId++ {
+		filename := fmt.Sprintf("mr-%d-%d", mapId, reduceId)
+		file, err := os.Open(filename)
+		if err != nil {
+			log.Fatalf("cannot open %v", filename)
+		}
+		dec := json.NewDecoder(file)
+		for {
+			var kv KeyValue
+			if err := dec.Decode(&kv); err != nil {
+				break
+			}
+			kva = append(kva, kv)
+		}
+		file.Close()
+	}
+
+	// 按 key 排序
+	sort.Sort(ByKey(kva))
+
+	// 写到临时文件，避免和重试冲突
+	pid := os.Getpid()
+	tmpFile := fmt.Sprintf("mr-out-tmp-%d-%d", pid, reduceId)
+	file, err := os.Create(tmpFile)
+	if err != nil {
+		log.Fatalf("cannot create %v", tmpFile)
+	}
+
+	i := 0
+	for i < len(kva) {
+		j := i + 1
+		for j < len(kva) && kva[j].Key == kva[i].Key {
+			j++
+		}
+		values := []string{}
+		for k := i; k < j; k++ {
+			values = append(values, kva[k].Value)
+		}
+		output := reducef(kva[i].Key, values)
+		fmt.Fprintf(file, "%v %v\n", kva[i].Key, output)
+		i = j
+	}
+	file.Close()
+
+	// 原子 rename 到最终文件名
+	os.Rename(tmpFile, fmt.Sprintf("mr-out-%d", reduceId))
+
+	// 清理中间文件
+	for mapId := 0; mapId < nMap; mapId++ {
+		os.Remove(fmt.Sprintf("mr-%d-%d", mapId, reduceId))
+	}
+
+	// 通知 coordinator 任务完成
+	CallReportTaskDone(reduceId, Reduce)
 }
+
+// 按 key 排序
+type ByKey []KeyValue
+
+func (a ByKey) Len() int           { return len(a) }
+func (a ByKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
 
 func CallGetTask() GetTaskReply {
 	args := GetTaskArgs{}

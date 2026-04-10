@@ -95,6 +95,7 @@ func (c *Coordinator) GetTask(args *GetTaskArgs, reply *GetTaskReply) error {
 				reply.Action = DoReduce
 				reply.TaskId = i
 				reply.NReduce = c.nReduce
+				reply.NMap = c.nMap
 				return nil
 			}
 			// 检查超时
@@ -105,6 +106,7 @@ func (c *Coordinator) GetTask(args *GetTaskArgs, reply *GetTaskReply) error {
 					reply.Action = DoReduce
 					reply.TaskId = i
 					reply.NReduce = c.nReduce
+					reply.NMap = c.nMap
 					return nil
 				}
 			}

@@ -37,4 +37,11 @@ type GetTaskReply struct {
 	NReduce  int
 }
 
-// Add your RPC definitions here.
+type ReportTaskDoneArgs struct {
+	TaskId int
+	Type   TaskType
+}
+
+type ReportTaskDoneReply struct {
+	Ok bool
+}

@@ -38,17 +38,21 @@ func Worker(sockname string, mapf func(string, string) []KeyValue,
 }
 
 func CallGetTask() {
-	// 声明参数结构体
 	args := GetTaskArgs{}
-	// 声明返回结构体
 	reply := GetTaskReply{}
 
-	ok := call("Coordinator.GetTask", &args, &reply)
-	if ok {
-		fmt.Printf("获得了数据\n")
-	} else {
-		fmt.Printf("调用失败!\n")
+	call("Coordinator.GetTask", &args, &reply)
+}
+
+func CallReportTaskDone(taskId int, taskType TaskType) bool {
+	args := ReportTaskDoneArgs{
+		TaskId: taskId,
+		Type:   taskType,
 	}
+	reply := ReportTaskDoneReply{}
+
+	ok := call("Coordinator.ReportTaskDone", &args, &reply)
+	return ok && reply.Ok
 }
 
 // 示例函数，展示如何向 coordinator 发起 RPC 调用

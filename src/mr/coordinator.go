@@ -120,6 +120,52 @@ func (c *Coordinator) GetTask(args *GetTaskArgs, reply *GetTaskReply) error {
 	return nil
 }
 
+func (c *Coordinator) ReportTaskDone(args *ReportTaskDoneArgs, reply *ReportTaskDoneReply) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	switch args.Type {
+	case Map:
+		// 丢弃：任务不在执行中 或 已进入 reduce 阶段
+		if c.mapTasks[args.TaskId].Status != InProgress {
+			reply.Ok = false
+			return nil
+		}
+		if c.phase != MapPhase {
+			reply.Ok = false
+			return nil
+		}
+		c.mapTasks[args.TaskId].Status = Completed
+		// 检查是否所有 Map 任务都完成
+		for _, task := range c.mapTasks {
+			if task.Status != Completed {
+				reply.Ok = true
+				return nil
+			}
+		}
+		c.phase = ReducePhase
+		reply.Ok = true
+	case Reduce:
+		// 丢弃：任务不在执行中
+		if c.reduceTasks[args.TaskId].Status != InProgress {
+			reply.Ok = false
+			return nil
+		}
+		c.reduceTasks[args.TaskId].Status = Completed
+		// 检查是否所有 Reduce 任务都完成
+		for _, task := range c.reduceTasks {
+			if task.Status != Completed {
+				reply.Ok = true
+				return nil
+			}
+		}
+		c.phase = DonePhase
+		reply.Ok = true
+	}
+
+	return nil
+}
+
 // 启动一个线程监听来自 worker.go 的 RPC 请求
 func (c *Coordinator) server(sockname string) {
 	rpc.Register(c)

@@ -116,7 +116,6 @@ func (c *Coordinator) GetTask(args *GetTaskArgs, reply *GetTaskReply) error {
 		reply.Action = Exit
 		return nil
 	}
-
 	return nil
 }
 

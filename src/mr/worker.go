@@ -1,11 +1,13 @@
 package mr
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"log"
 	"net/rpc"
 	"os"
+	"time"
 )
 
 // Map 函数返回 KeyValue 切片
@@ -30,18 +32,83 @@ func Worker(sockname string, mapf func(string, string) []KeyValue,
 
 	coordSockName = sockname
 
-	// 在这里实现 worker 逻辑
+	for {
+		reply := CallGetTask()
 
-	// 取消注释以发送示例 RPC 到 coordinator
-	// CallExample()
+		switch reply.Action {
+		case DoMap:
+			DoMapTask(reply.TaskId, reply.FileName, reply.NReduce, mapf)
+		case DoReduce:
+			DoReduceTask(reply.TaskId, reply.NReduce, reducef)
+		case Wait:
+			time.Sleep(time.Second)
+		case Exit:
+			return
+		}
+	}
 
 }
 
-func CallGetTask() {
+func DoMapTask(taskId int, filename string, nReduce int,
+	mapf func(string, string) []KeyValue) {
+
+	// 读取文件
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		log.Fatalf("cannot read %v", filename)
+	}
+
+	// 调用 mapf
+	kva := mapf(filename, string(content))
+
+	// 创建 nReduce 个临时文件，用 pid 和 taskId 区分避免冲突
+	reduceFiles := make([]*os.File, nReduce)
+	encoders := make([]*json.Encoder, nReduce)
+	tmpFiles := make([]string, nReduce)
+	pid := os.Getpid()
+	for i := 0; i < nReduce; i++ {
+		tmpFiles[i] = fmt.Sprintf("mr-tmp-%d-%d-%d", pid, taskId, i)
+		reduceFiles[i], err = os.Create(tmpFiles[i])
+		if err != nil {
+			log.Fatalf("cannot create %v", tmpFiles[i])
+		}
+		encoders[i] = json.NewEncoder(reduceFiles[i])
+	}
+
+	// 遍历 kva，写到对应文件
+	for _, kv := range kva {
+		reduceId := ihash(kv.Key) % nReduce
+		encoders[reduceId].Encode(&kv)
+	}
+
+	// 关闭文件
+	for i := 0; i < nReduce; i++ {
+		reduceFiles[i].Close()
+	}
+
+	// 原子 rename 到最终文件名
+	for i := 0; i < nReduce; i++ {
+		os.Rename(tmpFiles[i], fmt.Sprintf("mr-%d-%d", taskId, i))
+	}
+
+	// 通知 coordinator 任务完成
+	CallReportTaskDone(taskId, Map)
+}
+
+func DoReduceTask(taskId int, nReduce int,
+	reducef func(string, []string) string) {
+
+}
+
+func CallGetTask() GetTaskReply {
 	args := GetTaskArgs{}
 	reply := GetTaskReply{}
 
-	call("Coordinator.GetTask", &args, &reply)
+	ok := call("Coordinator.GetTask", &args, &reply)
+	if !ok {
+		reply.Action = Exit
+	}
+	return reply
 }
 
 func CallReportTaskDone(taskId int, taskType TaskType) bool {

@@ -1,0 +1,315 @@
+go build -race -o main/mrsequential main/mrsequential.go
+go build -race -o main/mrcoordinator main/mrcoordinator.go
+go build -race -o main/mrworker main/mrworker.go&
+(cd mrapps && go build -race -buildmode=plugin wc.go) || exit 1
+(cd mrapps && go build -race -buildmode=plugin indexer.go) || exit 1
+(cd mrapps && go build -race -buildmode=plugin mtiming.go) || exit 1
+(cd mrapps && go build -race -buildmode=plugin rtiming.go) || exit 1
+(cd mrapps && go build -race -buildmode=plugin jobcount.go) || exit 1
+(cd mrapps && go build -race -buildmode=plugin early_exit.go) || exit 1
+(cd mrapps && go build -race -buildmode=plugin crash.go) || exit 1
+(cd mrapps && go build -race -buildmode=plugin nocrash.go) || exit 1
+cd mr; go test -v -race 
+=== RUN   TestWc
+worker: do map task 0, file: ../../main/pg-sherlock_holmes.txt
+worker: do map task 1, file: ../../main/pg-tom_sawyer.txt
+worker: do map task 2, file: ../../main/pg-frankenstein.txt
+worker: map task 1 done
+worker: do map task 3, file: ../../main/pg-grimm.txt
+worker: map task 2 done
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: map task 0 done
+worker: do map task 5, file: ../../main/pg-huckleberry_finn.txt
+worker: map task 4 done
+worker: do map task 6, file: ../../main/pg-metamorphosis.txt
+worker: map task 6 done
+worker: do map task 7, file: ../../main/pg-dorian_gray.txt
+worker: map task 3 done
+worker: map task 7 done
+worker: map task 5 done
+worker: do reduce task 0
+worker: reduce task 0 done
+worker: do reduce task 1
+worker: reduce task 1 done
+worker: do reduce task 2
+worker: reduce task 2 done
+worker: do reduce task 3
+worker: do reduce task 4
+worker: reduce task 3 done
+worker: do reduce task 5
+worker: do reduce task 6
+worker: reduce task 4 done
+worker: do reduce task 7
+worker: reduce task 5 done
+worker: do reduce task 8
+worker: reduce task 7 done
+worker: do reduce task 9
+worker: reduce task 6 done
+worker: reduce task 8 done
+worker: reduce task 9 done
+worker: exit
+worker: exit
+worker: exit
+--- PASS: TestWc (8.03s)
+=== RUN   TestIndexer
+worker: do map task 0, file: ../../main/pg-sherlock_holmes.txt
+worker: do map task 1, file: ../../main/pg-tom_sawyer.txt
+worker: map task 1 done
+worker: do map task 2, file: ../../main/pg-frankenstein.txt
+worker: map task 0 done
+worker: do map task 3, file: ../../main/pg-grimm.txt
+worker: map task 2 done
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: map task 3 done
+worker: do map task 5, file: ../../main/pg-huckleberry_finn.txt
+worker: map task 4 done
+worker: do map task 6, file: ../../main/pg-metamorphosis.txt
+worker: map task 6 done
+worker: do map task 7, file: ../../main/pg-dorian_gray.txt
+worker: map task 5 done
+worker: map task 7 done
+worker: do reduce task 0
+worker: reduce task 0 done
+worker: do reduce task 1
+worker: reduce task 1 done
+worker: do reduce task 2
+worker: reduce task 2 done
+worker: do reduce task 3
+worker: reduce task 3 done
+worker: do reduce task 4
+worker: reduce task 4 done
+worker: do reduce task 5
+worker: reduce task 5 done
+worker: do reduce task 6
+worker: reduce task 6 done
+worker: do reduce task 7
+worker: reduce task 7 done
+worker: do reduce task 8
+worker: reduce task 8 done
+worker: do reduce task 9
+worker: reduce task 9 done
+worker: exit
+worker: exit
+--- PASS: TestIndexer (5.57s)
+=== RUN   TestMapParallel
+worker: do map task 1, file: ../../main/pg-tom_sawyer.txt
+worker: do map task 0, file: ../../main/pg-sherlock_holmes.txt
+worker: map task 0 done
+worker: map task 1 done
+worker: do map task 2, file: ../../main/pg-frankenstein.txt
+worker: do map task 3, file: ../../main/pg-grimm.txt
+worker: map task 3 done
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: map task 2 done
+worker: do map task 5, file: ../../main/pg-huckleberry_finn.txt
+worker: map task 4 done
+worker: do map task 6, file: ../../main/pg-metamorphosis.txt
+worker: map task 5 done
+worker: do map task 7, file: ../../main/pg-dorian_gray.txt
+worker: map task 6 done
+worker: map task 7 done
+worker: do reduce task 0
+worker: reduce task 0 done
+worker: do reduce task 1
+worker: reduce task 1 done
+worker: do reduce task 2
+worker: reduce task 2 done
+worker: do reduce task 3
+worker: reduce task 3 done
+worker: do reduce task 4
+worker: reduce task 4 done
+worker: do reduce task 5
+worker: reduce task 5 done
+worker: do reduce task 6
+worker: reduce task 6 done
+worker: do reduce task 7
+worker: reduce task 7 done
+worker: do reduce task 8
+worker: reduce task 8 done
+worker: do reduce task 9
+worker: reduce task 9 done
+worker: exit
+worker: exit
+--- PASS: TestMapParallel (8.05s)
+=== RUN   TestReduceParallel
+worker: do map task 1, file: ../../main/pg-tom_sawyer.txt
+worker: do map task 0, file: ../../main/pg-sherlock_holmes.txt
+worker: map task 0 done
+worker: map task 1 done
+worker: do map task 2, file: ../../main/pg-frankenstein.txt
+worker: do map task 3, file: ../../main/pg-grimm.txt
+worker: map task 2 done
+worker: map task 3 done
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: do map task 5, file: ../../main/pg-huckleberry_finn.txt
+worker: map task 4 done
+worker: do map task 6, file: ../../main/pg-metamorphosis.txt
+worker: map task 5 done
+worker: do map task 7, file: ../../main/pg-dorian_gray.txt
+worker: map task 6 done
+worker: map task 7 done
+worker: do reduce task 0
+worker: do reduce task 1
+worker: reduce task 0 done
+worker: do reduce task 2
+worker: reduce task 1 done
+worker: do reduce task 3
+worker: reduce task 2 done
+worker: do reduce task 4
+worker: reduce task 3 done
+worker: reduce task 4 done
+worker: do reduce task 5
+worker: do reduce task 6
+worker: reduce task 5 done
+worker: reduce task 6 done
+worker: do reduce task 7
+worker: do reduce task 8
+worker: reduce task 7 done
+worker: do reduce task 9
+worker: reduce task 8 done
+worker: reduce task 9 done
+worker: exit
+worker: exit
+--- PASS: TestReduceParallel (10.05s)
+=== RUN   TestJobCount
+worker: do map task 2, file: ../../main/pg-frankenstein.txt
+worker: do map task 0, file: ../../main/pg-sherlock_holmes.txt
+worker: do map task 3, file: ../../main/pg-grimm.txt
+worker: do map task 1, file: ../../main/pg-tom_sawyer.txt
+worker: map task 0 done
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: map task 3 done
+worker: do map task 5, file: ../../main/pg-huckleberry_finn.txt
+worker: map task 1 done
+worker: do map task 6, file: ../../main/pg-metamorphosis.txt
+worker: map task 2 done
+worker: do map task 7, file: ../../main/pg-dorian_gray.txt
+worker: map task 5 done
+worker: map task 6 done
+worker: map task 4 done
+worker: map task 7 done
+worker: do reduce task 0
+worker: reduce task 0 done
+worker: do reduce task 1
+worker: reduce task 1 done
+worker: do reduce task 2
+worker: reduce task 2 done
+worker: do reduce task 3
+worker: reduce task 3 done
+worker: do reduce task 4
+worker: reduce task 4 done
+worker: do reduce task 5
+worker: reduce task 5 done
+worker: do reduce task 6
+worker: reduce task 6 done
+worker: do reduce task 7
+worker: reduce task 7 done
+worker: do reduce task 8
+worker: reduce task 8 done
+worker: do reduce task 9
+worker: reduce task 9 done
+worker: exit
+worker: exit
+worker: exit
+worker: exit
+--- PASS: TestJobCount (13.06s)
+=== RUN   TestEarlyExit
+worker: do map task 3, file: ../../main/pg-grimm.txt
+worker: do map task 0, file: ../../main/pg-sherlock_holmes.txt
+worker: do map task 2, file: ../../main/pg-frankenstein.txt
+worker: do map task 1, file: ../../main/pg-tom_sawyer.txt
+worker: map task 2 done
+worker: map task 3 done
+worker: map task 0 done
+worker: map task 1 done
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: do map task 5, file: ../../main/pg-huckleberry_finn.txt
+worker: do map task 7, file: ../../main/pg-dorian_gray.txt
+worker: do map task 6, file: ../../main/pg-metamorphosis.txt
+worker: map task 4 done
+worker: map task 6 done
+worker: map task 5 done
+worker: map task 7 done
+worker: do reduce task 0
+worker: do reduce task 1
+worker: do reduce task 2
+worker: do reduce task 3
+worker: reduce task 0 done
+worker: reduce task 1 done
+worker: do reduce task 4
+worker: reduce task 2 done
+worker: do reduce task 5
+worker: do reduce task 6
+worker: reduce task 4 done
+worker: do reduce task 7
+worker: reduce task 6 done
+worker: do reduce task 8
+worker: reduce task 7 done
+worker: do reduce task 9
+worker: reduce task 8 done
+worker: reduce task 9 done
+worker: reduce task 3 done
+worker: reduce task 5 done
+worker: exit
+worker: exit
+worker: exit
+worker: exit
+--- PASS: TestEarlyExit (7.07s)
+=== RUN   TestCrashWorker
+worker: do map task 0, file: ../../main/pg-sherlock_holmes.txt
+worker: do map task 1, file: ../../main/pg-tom_sawyer.txt
+worker: do map task 2, file: ../../main/pg-frankenstein.txt
+worker: do map task 3, file: ../../main/pg-grimm.txt
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: do map task 5, file: ../../main/pg-huckleberry_finn.txt
+worker: do map task 6, file: ../../main/pg-metamorphosis.txt
+worker: map task 6 done
+worker: do map task 7, file: ../../main/pg-dorian_gray.txt
+worker: map task 1 done
+worker: map task 7 done
+worker: map task 0 done
+worker: do map task 2, file: ../../main/pg-frankenstein.txt
+worker: do map task 3, file: ../../main/pg-grimm.txt
+worker: map task 3 done
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: do map task 5, file: ../../main/pg-huckleberry_finn.txt
+worker: map task 2 done
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: do map task 5, file: ../../main/pg-huckleberry_finn.txt
+worker: map task 5 done
+worker: do map task 4, file: ../../main/pg-being_ernest.txt
+worker: map task 4 done
+worker: do reduce task 0
+worker: reduce task 0 done
+worker: do reduce task 1
+worker: reduce task 1 done
+worker: do reduce task 2
+worker: do reduce task 3
+worker: reduce task 3 done
+worker: do reduce task 4
+worker: reduce task 4 done
+worker: do reduce task 5
+worker: do reduce task 6
+worker: reduce task 6 done
+worker: do reduce task 7
+worker: reduce task 7 done
+worker: do reduce task 8
+worker: reduce task 8 done
+worker: do reduce task 9
+worker: reduce task 9 done
+worker: do reduce task 2
+worker: reduce task 2 done
+worker: do reduce task 5
+worker: do reduce task 5
+worker: do reduce task 5
+worker: reduce task 5 done
+worker: exit
+worker: exit
+worker: exit
+worker: exit
+worker: exit
+worker: exit
+worker: exit
+--- PASS: TestCrashWorker (79.30s)
+PASS
+ok  	6.5840/mr	132.523s

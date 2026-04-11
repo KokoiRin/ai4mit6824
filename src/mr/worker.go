@@ -38,16 +38,20 @@ func Worker(sockname string, mapf func(string, string) []KeyValue,
 
 		switch reply.Action {
 		case DoMap:
+			fmt.Printf("worker: do map task %d, file: %s\n", reply.TaskId, reply.FileName)
 			DoMapTask(reply.TaskId, reply.FileName, reply.NReduce, mapf)
+			fmt.Printf("worker: map task %d done\n", reply.TaskId)
 		case DoReduce:
+			fmt.Printf("worker: do reduce task %d\n", reply.TaskId)
 			DoReduceTask(reply.TaskId, reply.NMap, reducef)
+			fmt.Printf("worker: reduce task %d done\n", reply.TaskId)
 		case Wait:
 			time.Sleep(time.Second)
 		case Exit:
+			fmt.Printf("worker: exit\n")
 			return
 		}
 	}
-
 }
 
 func DoMapTask(taskId int, filename string, nReduce int,

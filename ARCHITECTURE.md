@@ -4,6 +4,7 @@
 
 本项目是 MIT 6.5840 (原 6.824) 分布式系统课程的实验代码库，包含多个逐层递进的分布式系统实验：
 
+- **Lab 0**: kvsrv1 - 单机 Key-Value 服务 (前置实验)
 - **Lab 1**: MapReduce 分布式计算框架
 - **Lab 2**: Raft 共识算法
 - **Lab 3**: 基于 Raft 的 Key-Value 服务 (kvraft)
@@ -131,7 +132,48 @@ mrcoordinator → Unix Socket RPC → mrworkers
 - `src/mr/worker.go`: Worker 实现
 - `src/mr/rpc.go`: RPC 定义
 
-### 4.2 Raft (Lab 2)
+### 4.2 kvsrv1 - 单机 Key-Value 服务 (前置实验)
+
+**单机 KV 服务**，不带复制，是 Raft 实验的前置练习：
+
+```
+Clerk (client.go)  →  RPC  →  KVServer (server.go)
+```
+
+**核心概念**:
+- **版本号 (Version)**: 每个 key 有一个递增的版本号
+- **CAS 操作**: Put 需要提供正确版本号才能更新
+- **ErrMaybe**: 网络不可靠时，Clerk 返回 ErrMaybe 表示不确定操作是否成功
+
+**RPC 协议** (`kvsrv1/rpc/rpc.go`):
+```go
+// Get 请求
+type GetArgs struct { Key string }
+type GetReply struct { Value string, Version Tversion, Err Err }
+
+// Put 请求 (带版本号的 CAS 操作)
+type PutArgs struct { Key, Value string, Version Tversion }
+type PutReply struct { Err Err }
+```
+
+**错误码**:
+- `OK`: 操作成功
+- `ErrNoKey`: key 不存在
+- `ErrVersion`: 版本不匹配
+- `ErrMaybe`: 网络不可靠时，返回给调用者表示"可能成功"
+
+**需要实现**:
+- `KVServer.Get()`: 返回 key 的值和版本
+- `KVServer.Put()`: 版本匹配时更新，版本+1
+- `Clerk.Get()`: 封装 RPC 调用
+- `Clerk.Put()`: 封装 RPC 调用，处理 ErrMaybe
+
+**运行测试**:
+```bash
+cd src && make kvsrv1
+```
+
+### 4.3 Raft (Lab 2)
 
 Raft 共识算法实现，为上层提供复制状态机基础：
 
@@ -168,7 +210,7 @@ type Raft interface {
 }
 ```
 
-### 4.3 KV Raft (Lab 3)
+### 4.4 KV Raft (Lab 3)
 
 基于 Raft 的复制 KV 服务：
 
@@ -197,7 +239,7 @@ type Raft interface {
 - **StateMachine 接口**: `DoOp`, `Snapshot`, `Restore`
 - **Clerk**: 客户端，处理 leader 发现和重试
 
-### 4.4 Sharded KV (Lab 4)
+### 4.5 Sharded KV (Lab 4)
 
 分片 Key-Value 服务，支持动态分片迁移：
 
@@ -283,7 +325,7 @@ make all
 
 # 单独测试
 make mr         # MapReduce
-make kvsrv1     # 单机 KV
+make kvsrv1     # 单机 KV (前置实验)
 make raft1      # Raft
 make rsm1       # RSM 层
 make kvraft1    # KV Raft
